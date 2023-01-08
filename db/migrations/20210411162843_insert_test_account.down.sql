@@ -1,0 +1,4 @@
+LOCK TABLES `accounts` WRITE;
+DELETE FROM `accounts` WHERE id = 1;
+UNLOCK TABLES;
+

@@ -1,0 +1,3 @@
+[submodule "pkg/pb"]
+	path = pkg/pb
+	url = git@github.com:bdarge/sb-proto.git
