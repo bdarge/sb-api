@@ -1,38 +1,42 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+)
+
+type Model struct {
+	ID        uint32    `json:"id,string"` // https://stackoverflow.com/a/21152548
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	DeletedAt time.Time `json:"deletedAt"`
+}
 
 // Disposition Model
 type Disposition struct {
-	gorm.Model
-	Description       string            `gorm:"column:description" json:"description"`
-	DeliveryDate      string            `gorm:"column:delivery_date" json:"deliveryDate"`
-	InvoiceNumber     string            `gorm:"column:invoice_number" json:"invoiceNumber"`
-	Currency          string            `gorm:"column:currency" json:"currency"`
-	DispositionNumber string            `gorm:"column:disposition_number" json:"dispositionNumber"`
-	Items             []DispositionItem `json:"items"`
-	CreatedBy         uint              `json:"createdBy"`
-	CustomerID        uint              `json:"customerId"`
-	RequestType       string            `gorm:"column:requestType" json:"requestType"`
+	Model
+	Description   string            `gorm:"column:description" json:"description"`
+	DeliveryDate  time.Time         `gorm:"column:delivery_date" json:"deliveryDate"`
+	InvoiceNumber string            `gorm:"column:invoice_number" json:"invoiceNumber"`
+	Currency      string            `gorm:"column:currency" json:"currency"`
+	Items         []DispositionItem `json:"items"`
+	CreatedBy     uint32            `json:"createdBy"`
+	CustomerID    uint32            `json:"customerId"`
+	RequestType   string            `gorm:"column:requestType" json:"requestType"`
 }
 
 // DispositionItem Model
 type DispositionItem struct {
-	gorm.Model
-	Description   string `gorm:"column:description" json:"description"`
-	Qty           string `gorm:"column:qty" json:"qty"`
-	Unit          string `gorm:"column:unit" json:"unit"`
-	UnitPrice     string `gorm:"column:unit_price" json:"unitPrice"`
-	DispositionID uint   `json:"dispositionId"`
-}
-
-type Page struct {
-	Page  int   `json:"page"`
-	Size  int   `json:"size"`
-	Total int64 `json:"total"`
+	Model
+	Description   string  `gorm:"column:description" json:"description"`
+	Qty           uint32  `gorm:"column:qty" json:"qty"`
+	Unit          string  `gorm:"column:unit" json:"unit"`
+	UnitPrice     float64 `gorm:"column:unit_price" json:"unitPrice"`
+	DispositionID uint32  `json:"dispositionId"`
 }
 
 type Dispositions struct {
-	Page
-	Data []Disposition `json:"data"`
+	Limit uint32        `json:"limit"`
+	Page  uint32        `json:"page"`
+	Total uint32        `json:"total"`
+	Data  []Disposition `json:"data"`
 }

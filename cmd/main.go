@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/bdarge/api/out/customer"
+	"github.com/bdarge/api/out/disposition"
 	"github.com/bdarge/api/pkg/config"
-	"github.com/bdarge/api/pkg/customer"
 	"github.com/bdarge/api/pkg/db"
-	"github.com/bdarge/api/pkg/disposition"
 	"github.com/bdarge/api/pkg/services"
 	"github.com/bdarge/api/pkg/util"
 	_ "github.com/go-sql-driver/mysql"
@@ -54,19 +54,19 @@ func main() {
 
 	fmt.Println("api service on", conf.ServerPort)
 
-	s := services.Server{
+	dispositionServer := services.Server{
 		H: handler,
 	}
 
 	grpcServer := grpc.NewServer()
 
-	disposition.RegisterDispositionServiceServer(grpcServer, &s)
+	disposition.RegisterDispositionServiceServer(grpcServer, &dispositionServer)
 
-	custServer := services.CustomerServer{
+	customerServer := services.CustomerServer{
 		H: handler,
 	}
 
-	customer.RegisterCustomerServiceServer(grpcServer, &custServer)
+	customer.RegisterCustomerServiceServer(grpcServer, &customerServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalln("Failed to serve:", err)

@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"github.com/bdarge/api/out/disposition"
 	"github.com/bdarge/api/pkg/db"
-	"github.com/bdarge/api/pkg/disposition"
 	"github.com/bdarge/api/pkg/models"
 	"github.com/bdarge/api/pkg/util"
 	"google.golang.org/protobuf/encoding/protojson"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"strings"
@@ -19,51 +21,78 @@ type Server struct {
 	disposition.UnimplementedDispositionServiceServer
 }
 
-func (server *Server) CreateDisposition(ctx context.Context, request *disposition.CreateDispositionRequest) (*disposition.CreateDispositionResponse, error) {
+func (server *Server) CreateDisposition(_ context.Context, request *disposition.CreateDispositionRequest) (*disposition.CreateDispositionResponse, error) {
 	d := &models.Disposition{}
-	err := util.Recast(request, d)
+	value, err := protojson.Marshal(request)
+	if err != err {
+		return &disposition.CreateDispositionResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
+	}
+	log.Printf("disposition constructed from a message: %s", value)
+	err = json.Unmarshal(value, d)
+	log.Printf("disposition model constructed from bytes: %v", d)
+	if err != err {
+		return &disposition.CreateDispositionResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
+	}
 	err = server.H.DB.Create(&d).
 		Error
 
 	if err != nil {
 		return &disposition.CreateDispositionResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
-	} else {
-		return &disposition.CreateDispositionResponse{
-			Status: http.StatusCreated,
-			Id:     int64(d.ID),
-		}, nil
 	}
+	return &disposition.CreateDispositionResponse{
+		Status: http.StatusCreated,
+		Id:     d.ID,
+	}, nil
 }
 
-func (server *Server) GetDisposition(ctx context.Context, request *disposition.GetDispositionRequest) (*disposition.GetDispositionResponse, error) {
+func (server *Server) GetDisposition(_ context.Context, request *disposition.GetDispositionRequest) (*disposition.GetDispositionResponse, error) {
 	var d models.Disposition
 	log.Printf("get disposition with id, %d\n", request.Id)
 
-	err := server.H.DB.Where("id = ?", request.Id).
+	err := server.H.DB.Model(&models.Disposition{}).
+		Preload("Items").
+		Where("id = ?", request.Id).
 		First(&d).
 		Error
 
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &disposition.GetDispositionResponse{Status: http.StatusNotFound, Error: err.Error()}, nil
+		}
 		return &disposition.GetDispositionResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
-	} else {
-		data := &disposition.DispositionData{}
-		err = util.Recast(d, data)
-		return &disposition.GetDispositionResponse{
-			Status: http.StatusOK,
-			Data:   data,
-		}, nil
 	}
+
+	log.Printf("disposition found: %v", d)
+
+	messageInBytes, err := json.Marshal(d)
+	if err != nil {
+		return &disposition.GetDispositionResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
+	}
+	log.Printf("stringfy data in bytes: %s", messageInBytes)
+	response := disposition.DispositionData{}
+
+	// ignore unknown fields
+	unMarshaller := &protojson.UnmarshalOptions{DiscardUnknown: true}
+	err = unMarshaller.Unmarshal(messageInBytes, &response)
+	if err != nil {
+		log.Printf("Error: %v,", err)
+		return &disposition.GetDispositionResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
+	}
+	log.Printf("proto message: %v", &response)
+
+	return &disposition.GetDispositionResponse{
+		Status: http.StatusOK,
+		Data:   &response,
+	}, nil
 }
 
-func (server *Server) GetDispositions(ctx context.Context, request *disposition.GetDispositionsRequest) (*disposition.GetDispositionsResponse, error) {
-	log.Printf("get all dispositions, filter by requestType if set, request: %v\n", request)
+func (server *Server) GetDispositions(_ context.Context, request *disposition.GetDispositionsRequest) (*disposition.GetDispositionsResponse, error) {
+	log.Printf("get all dispositions, %v", request)
 
 	var dispositions = make([]models.Disposition, 0)
 
-	log.Printf("get order or/and quotes with or without filters; filter=%s; sort porperty=%s\n", request.Search, request.SortProperty)
-
-	if request.Size == 0 {
-		request.Size = 10
+	if request.Limit == 0 {
+		request.Limit = 10
 	}
 
 	if request.SortDirection == "" {
@@ -73,68 +102,56 @@ func (server *Server) GetDispositions(ctx context.Context, request *disposition.
 	}
 
 	if request.SortProperty == "" {
-		request.SortProperty = "disposition.id"
+		request.SortProperty = "dispositions.id"
 	} else {
-		request.SortProperty = "disposition." + util.ToSnakeCase(request.SortProperty)
+		request.SortProperty = "dispositions." + util.ToSnakeCase(request.SortProperty)
 	}
 
-	rows, err := server.H.DB.
-		Model(&models.Disposition{}).
-		Select("disposition.*").
-		Limit(int(request.Size)).
-		Offset(int(request.Page*request.Size)).
-		Where("true = ?", request.RequestType == "").
-		Or("RequestType = ?", "%"+request.RequestType+"%").
-		Where("true = ?", request.Search == "").
-		Or("Description LIKE ?", "%"+request.Search+"%").
+	log.Printf("request: %v", request)
+
+	err := server.H.DB.Model(&models.Disposition{}).
+		Preload("Items").
+		Where("true = ? Or RequestType = ?", request.RequestType == "", request.RequestType).
+		Where("true = ? Or Description LIKE ?", request.Search == "", "%"+request.Search+"%").
+		Limit(int(request.Limit)).
+		Offset(int(request.Page * request.Limit)).
 		Order(request.SortProperty + " " + request.SortDirection).
-		Rows()
+		Find(&dispositions).
+		Error
 
 	if err != nil {
 		return &disposition.GetDispositionsResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
-	}
-
-	defer rows.Close()
-
-	for rows.Next() {
-		var d models.Disposition
-		err = server.H.DB.ScanRows(rows, &d)
-		if err != nil {
-			log.Fatal(err)
-		}
-		dispositions = append(dispositions, d)
 	}
 
 	var total int64
 
-	server.H.DB.Model(&disposition.DispositionData{}).Count(&total)
+	server.H.DB.Model(&models.Disposition{}).Count(&total)
 
 	page := models.Dispositions{
-		Data: dispositions,
-		Page: models.Page{
-			Page:  int(request.Page),
-			Size:  int(request.Size),
-			Total: total,
-		},
+		Data:  dispositions,
+		Limit: request.Limit,
+		Page:  request.Page,
+		Total: uint32(total),
 	}
 
 	if err != nil {
 		return &disposition.GetDispositionsResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
 	}
 
-	b, err := json.Marshal(page)
+	messageInBytes, err := json.Marshal(page)
+	if err != nil {
+		return &disposition.GetDispositionsResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
+	}
+	log.Printf("dispositions found: %s", messageInBytes)
+	var response disposition.GetDispositionsResponse
 
+	// ignore unknown fields
+	unMarshaller := &protojson.UnmarshalOptions{DiscardUnknown: true}
+	err = unMarshaller.Unmarshal(messageInBytes, &response)
 	if err != nil {
 		return &disposition.GetDispositionsResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
 	}
 
-	var result disposition.GetDispositionsResponse
-	err = protojson.Unmarshal(b, &result)
-
-	if err != nil {
-		return &disposition.GetDispositionsResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
-	}
-
-	result.Status = http.StatusOK
-	return &result, nil
+	response.Status = http.StatusOK
+	return &response, nil
 }

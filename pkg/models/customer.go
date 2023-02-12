@@ -1,11 +1,16 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+)
 
 // Customer Model
 type Customer struct {
-	gorm.Model
-	Email        *string `gorm:"unique;not null"`
-	Name         *string `gorm:"not null"`
+	ID           uint32    `json:"id,string"` // https://stackoverflow.com/a/21152548
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+	DeletedAt    time.Time `json:"deletedAt"`
+	Email        *string   `gorm:"unique;not null"`
+	Name         *string   `gorm:"not null"`
 	Dispositions []Disposition
 }
