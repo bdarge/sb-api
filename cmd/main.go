@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bdarge/api/out/customer"
-	"github.com/bdarge/api/out/disposition"
+	"github.com/bdarge/api/out/transaction"
 	"github.com/bdarge/api/pkg/config"
 	"github.com/bdarge/api/pkg/db"
 	"github.com/bdarge/api/pkg/services"
@@ -54,13 +54,13 @@ func main() {
 
 	fmt.Println("api service on", conf.ServerPort)
 
-	dispositionServer := services.Server{
+	transactionServer := services.Server{
 		H: handler,
 	}
 
 	grpcServer := grpc.NewServer()
 
-	disposition.RegisterDispositionServiceServer(grpcServer, &dispositionServer)
+	transaction.RegisterTransactionServiceServer(grpcServer, &transactionServer)
 
 	customerServer := services.CustomerServer{
 		H: handler,

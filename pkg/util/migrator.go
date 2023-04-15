@@ -18,7 +18,7 @@ func Migrate(conf Config, handler db.Handler) error {
 	dbInstance, _ := sql.Open("mysql", conf.DSN+"&multiStatements=true")
 
 	err := handler.DB.AutoMigrate(&models.User{}, &models.Account{},
-		&models.Customer{}, &models.Disposition{}, &models.DispositionItem{})
+		&models.Customer{}, &models.Transaction{}, &models.TransactionItem{})
 	if err != nil {
 		return err
 	}

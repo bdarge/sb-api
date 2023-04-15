@@ -12,5 +12,5 @@ type Account struct {
 	DeletedAt time.Time `json:"deletedAt"`
 	Email     *string   `gorm:"unique;not null" json:"email"`
 	Password  *string   `gorm:"not null" json:"-"`
-	UserID    int       `json:"userId"`
+	UserID    uint32    `json:"userId"`
 }

@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// User Model
+// User Model. User has an account
 type User struct {
 	ID            uint32        `json:"id,string"` // https://stackoverflow.com/a/21152548
 	CreatedAt     time.Time     `json:"createdAt"`
@@ -20,6 +20,6 @@ type User struct {
 	LandLinePhone string        `gorm:"column:landline_phone" json:"landlinePhone"`
 	MobilePhone   string        `gorm:"column:mobile_phone" json:"mobilePhone"`
 	Vat           string        `json:"vat"`
-	Dispositions  []Disposition `gorm:"foreignKey:CreatedBy" json:"dispositions"`
+	Transactions  []Transaction `gorm:"foreignKey:CreatedBy" json:"transactions"`
 	Account       Account
 }

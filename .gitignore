@@ -17,7 +17,7 @@
 .idea
 bin
 
-.log
+*.log
 
 # proto
 out
