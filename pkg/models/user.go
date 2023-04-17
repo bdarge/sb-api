@@ -1,15 +1,8 @@
 package models
 
-import (
-	"time"
-)
-
 // User Model. User has an account
 type User struct {
-	ID            uint32        `json:"id,string"` // https://stackoverflow.com/a/21152548
-	CreatedAt     time.Time     `json:"createdAt"`
-	UpdatedAt     time.Time     `json:"updatedAt"`
-	DeletedAt     time.Time     `json:"deletedAt"`
+	Model
 	UserName      string        `json:"username"`
 	HourlyRate    string        `json:"hourlyRate"`
 	BusinessName  string        `json:"businessName"`
