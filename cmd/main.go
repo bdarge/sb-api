@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bdarge/api/out/customer"
+	"github.com/bdarge/api/out/profile"
 	"github.com/bdarge/api/out/transaction"
 	"github.com/bdarge/api/pkg/config"
 	"github.com/bdarge/api/pkg/db"
@@ -67,6 +68,12 @@ func main() {
 	}
 
 	customer.RegisterCustomerServiceServer(grpcServer, &customerServer)
+
+	profileServer := services.ProfileServer{
+		H: handler,
+	}
+
+	profile.RegisterProfileServiceServer(grpcServer, &profileServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalln("Failed to serve:", err)
