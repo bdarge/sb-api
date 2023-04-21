@@ -148,32 +148,7 @@ func (server *CustomerServer) UpdateCustomer(_ context.Context, request *custome
 		return &customer.UpdateCustomerResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
 	}
 
-	value, err := protojson.Marshal(request)
-	if err != err {
-		return &customer.UpdateCustomerResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
-	}
-	log.Printf("update customer constructed from a proto message: %s", value)
-
-	u := &models.Customer{}
-
-	err = json.Unmarshal(value, u)
-
-	log.Printf("update customer request constructed from bytes: %v", u)
-
-	if err != err {
-		return &customer.UpdateCustomerResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
-	}
-
-	update := make(map[string]interface{})
-
-	if u.Name != nil && u.Name != c.Name {
-		update["name"] = u.Name
-	}
-	if u.Email != nil && u.Email != c.Email {
-		update["email"] = u.Email
-	}
-
-	err = server.H.DB.Model(c).Updates(update).Error
+	err = server.H.DB.Model(c).Updates(request.Data).Error
 
 	if err != nil {
 		log.Printf("Failed to update: %v", err)

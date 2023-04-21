@@ -20,12 +20,12 @@ type ProfileServer struct {
 }
 
 func (server *ProfileServer) GetUser(_ context.Context, request *profile.GetUserRequest) (*profile.GetUserResponse, error) {
-	var d models.User
+	var u models.User
 	log.Printf("get profile with id, %d\n", request.Id)
 
 	err := server.H.DB.Model(&models.User{}).
 		Where("users.id = ?", request.Id).
-		First(&d).
+		First(&u).
 		Error
 
 	if err != nil {
@@ -35,9 +35,9 @@ func (server *ProfileServer) GetUser(_ context.Context, request *profile.GetUser
 		return &profile.GetUserResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
 	}
 
-	log.Printf("profile found: %v", d)
+	log.Printf("profile found: %v", u)
 
-	response, err := mapUser(&d)
+	response, err := mapUser(&u)
 
 	if err != nil {
 		log.Printf("Mapping proto type failed: %v", err)
@@ -47,6 +47,68 @@ func (server *ProfileServer) GetUser(_ context.Context, request *profile.GetUser
 	}
 
 	return &profile.GetUserResponse{
+		Status: http.StatusOK,
+		Data:   response,
+	}, nil
+}
+
+func (server *ProfileServer) UpdateUser(_ context.Context, request *profile.UpdateUserRequest) (*profile.UpdateUserResponse, error) {
+	var user models.User
+	log.Printf("update user (id = %d)\n", request.Id)
+
+	err := server.H.DB.Model(&models.User{}).
+		Where("users.id = ?", request.Id).
+		First(&user).
+		Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &profile.UpdateUserResponse{Status: http.StatusNotFound, Error: err.Error()}, nil
+		}
+		return &profile.UpdateUserResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
+	}
+
+	value, err := protojson.Marshal(request)
+	if err != err {
+		return &profile.UpdateUserResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
+	}
+	log.Printf("update profile constructed from a proto message: %s", value)
+
+	if err != err {
+		return &profile.UpdateUserResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
+	}
+
+	err = server.H.DB.Model(user).Updates(request.Data).Error
+
+	if err != nil {
+		log.Printf("Failed to update: %v", err)
+		return &profile.UpdateUserResponse{
+			Status: http.StatusBadRequest, Error: "Failed to update",
+		}, nil
+	}
+
+	err = server.H.DB.Model(&models.User{}).
+		Where("users.id = ?", request.Id).
+		First(&user).
+		Error
+
+	if err != nil {
+		log.Printf("Failed to get updated data: %v", err)
+		return &profile.UpdateUserResponse{
+			Status: http.StatusBadRequest, Error: "Failed to get updated data",
+		}, nil
+	}
+
+	response, err := mapUser(&user)
+
+	if err != nil {
+		log.Printf("Mapping to map to proto type failed: %v", err)
+		return &profile.UpdateUserResponse{
+			Status: http.StatusBadRequest, Error: "Failed to map to proto type",
+		}, nil
+	}
+
+	return &profile.UpdateUserResponse{
 		Status: http.StatusOK,
 		Data:   response,
 	}, nil

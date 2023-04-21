@@ -182,40 +182,14 @@ func (server *Server) UpdateTransaction(_ context.Context, request *transaction.
 	}
 
 	value, err := protojson.Marshal(request)
+
 	if err != err {
 		return &transaction.UpdateTransactionResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
 	}
+
 	log.Printf("update transaction constructed from a proto message: %s", value)
 
-	u := &models.Transaction{}
-
-	err = json.Unmarshal(value, u)
-
-	log.Printf("update transaction request constructed from bytes: %v", u)
-
-	if err != err {
-		return &transaction.UpdateTransactionResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
-	}
-
-	update := make(map[string]interface{})
-
-	if u.CustomerID > 0 && u.CustomerID != d.CustomerID {
-		update["CustomerID"] = u.CustomerID
-	}
-	if u.Description != "" && u.Description != d.Description {
-		update["Description"] = u.Description
-	}
-	if u.RequestType != "" && u.RequestType != d.RequestType {
-		update["RequestType"] = u.RequestType
-	}
-	if u.Currency != "" && u.Currency != d.Currency {
-		update["Currency"] = u.Currency
-	}
-	if u.DeliveryDate != nil && u.DeliveryDate != d.DeliveryDate {
-		update["DeliveryDate"] = u.DeliveryDate
-	}
-	log.Printf("update to: %v", update)
-	err = server.H.DB.Model(d).Updates(update).Error
+	err = server.H.DB.Model(d).Updates(request.Data).Error
 
 	if err != nil {
 		log.Printf("Failed to update: %v", err)
