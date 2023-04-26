@@ -6,7 +6,7 @@ import (
 )
 
 type Model struct {
-	ID        uint32         `json:"id"` // https://stackoverflow.com/a/21152548
+	ID        uint32         `json:"id"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"deletedAt"`
@@ -27,4 +27,5 @@ type User struct {
 	Vat           string        `json:"vat"`
 	Transactions  []Transaction `gorm:"foreignKey:CreatedBy" json:"transactions"`
 	Account       Account
+	Roles         []Role `gorm:"many2many:user_roles;" json:"roles"`
 }

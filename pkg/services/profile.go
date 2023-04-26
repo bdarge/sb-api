@@ -24,6 +24,7 @@ func (server *ProfileServer) GetUser(_ context.Context, request *profile.GetUser
 	log.Printf("get profile with id, %d\n", request.Id)
 
 	err := server.H.DB.Model(&models.User{}).
+		Preload("Roles").
 		Where("users.id = ?", request.Id).
 		First(&u).
 		Error

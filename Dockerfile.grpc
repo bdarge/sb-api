@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine as builder
+FROM golang:1.20-alpine as builder
 
 WORKDIR /tmp/app
 
@@ -12,13 +12,21 @@ ADD cmd cmd
 
 RUN go build -o ./out cmd/main.go
 
-FROM golang:1.19-alpine as dev
+FROM golang:1.20-alpine as dev
 
 WORKDIR /bin/app
 
 RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
 
 ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o ./bin/app ./cmd/" -command="./bin/app"
+
+FROM golang:1.20-alpine as dev_migrator
+
+WORKDIR /bin/app_migrator
+
+RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
+
+ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o ./bin/app_migrator ./cmd/" -command="./bin/app_migrator"
 
 FROM alpine:latest as prod
 
