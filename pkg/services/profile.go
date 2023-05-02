@@ -25,6 +25,9 @@ func (server *ProfileServer) GetUser(_ context.Context, request *profile.GetUser
 
 	err := server.H.DB.Model(&models.User{}).
 		Preload("Roles").
+		Preload("Business.Address").
+		Joins("Business").
+		Joins("Address").
 		Where("users.id = ?", request.Id).
 		First(&u).
 		Error
@@ -113,6 +116,62 @@ func (server *ProfileServer) UpdateUser(_ context.Context, request *profile.Upda
 		Status: http.StatusOK,
 		Data:   response,
 	}, nil
+}
+
+func (server *ProfileServer) GetBusiness(_ context.Context, request *profile.GetBusinessRequest) (*profile.GetBusinessResponse, error) {
+	var u models.Business
+	log.Printf("get business profile with id, %d\n", request.Id)
+
+	err := server.H.DB.Model(&models.Business{}).
+		Joins("Address").
+		Where("businesses.id = ?", request.Id).
+		First(&u).
+		Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &profile.GetBusinessResponse{Status: http.StatusNotFound, Error: err.Error()}, nil
+		}
+		return &profile.GetBusinessResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
+	}
+
+	log.Printf("profile found: %v", u)
+
+	response, err := mapBusiness(&u)
+
+	if err != nil {
+		log.Printf("Mapping proto type failed: %v", err)
+		return &profile.GetBusinessResponse{
+			Status: http.StatusBadRequest, Error: "Mapping proto type failed",
+		}, nil
+	}
+
+	return &profile.GetBusinessResponse{
+		Status: http.StatusOK,
+		Data:   response,
+	}, nil
+}
+
+func mapBusiness(d *models.Business) (*profile.BusinessData, error) {
+	log.Printf("Marsha to proto type")
+	messageInBytes, err := json.Marshal(d)
+	if err != nil {
+		log.Printf("Marshal Error: %v,", err)
+		return nil, err
+	}
+	log.Printf("raw data:- %s", messageInBytes)
+	response := profile.BusinessData{}
+
+	// ignore unknown fields
+	unMarshaller := &protojson.UnmarshalOptions{DiscardUnknown: true}
+	err = unMarshaller.Unmarshal(messageInBytes, &response)
+	if err != nil {
+		log.Printf("Unmarshal Error: %v,", err)
+		return nil, err
+	}
+	log.Printf("message:- %v", &response)
+
+	return &response, nil
 }
 
 func mapUser(d *models.User) (*profile.UserData, error) {

@@ -1,4 +1,29 @@
 LOCK TABLES `accounts` WRITE;
-DELETE FROM `accounts` WHERE id = 1;
+DELETE FROM `accounts`
 UNLOCK TABLES;
+
+LOCK TABLES `addresses` WRITE;
+DELETE FROM `addresses`
+UNLOCK TABLES;
+
+LOCK TABLES `user_roles` WRITE;
+DELETE FROM  `user_roles`;
+UNLOCK TABLES;
+
+LOCK TABLES `businesses` WRITE;
+DELETE FROM `businesses`;
+UNLOCK TABLES;
+
+LOCK TABLES `roles` WRITE;
+DELETE FROM `roles`
+UNLOCK TABLES;
+
+LOCK TABLES `users` WRITE;
+DELETE FROM `users`
+UNLOCK TABLES;
+
+
+
+
+
 

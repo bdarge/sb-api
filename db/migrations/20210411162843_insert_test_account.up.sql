@@ -4,17 +4,29 @@ LOCK TABLES `roles` WRITE;
 INSERT INTO `roles` VALUES (1,CURDATE(),CURDATE(), NULL, 'admin');
 INSERT INTO `roles` VALUES (2,CURDATE(),CURDATE(), NULL, 'manager');
 INSERT INTO `roles` VALUES (3,CURDATE(),CURDATE(), NULL, 'supervisor');
+INSERT INTO `roles` VALUES (4,CURDATE(),CURDATE(), NULL, 'user');
+UNLOCK TABLES;
+
+LOCK TABLES `businesses` WRITE;
+INSERT INTO `businesses` VALUES (1,CURDATE(),CURDATE(),NULL, 'BB plc', 50, 15);
 UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
-INSERT INTO `users` VALUES (1,CURDATE(),CURDATE(),NULL, 'Mr. Cool', '4', 'Boring','80 peace way', '20708', 'laurel','USA', '555-344-3434', '555-344-3434', '15');
+INSERT INTO `users` VALUES (1,CURDATE(),CURDATE(),NULL, 'john', 1);
+INSERT INTO `users` VALUES (2,CURDATE(),CURDATE(),NULL, 'sam', 1);
 UNLOCK TABLES;
 
 LOCK TABLES `user_roles` WRITE;
 INSERT INTO `user_roles` VALUES (1, 1);
 INSERT INTO `user_roles` VALUES (1, 2);
 INSERT INTO `user_roles` VALUES (1, 3);
+INSERT INTO `user_roles` VALUES (1, 4);
 UNLOCK TABLES;
+
+LOCK TABLES `addresses` WRITE;
+INSERT INTO `addresses` VALUES (1,CURDATE(),CURDATE(), NULL, '80 world way', '20770', 'laurel', 'CO', 'USA', '555-344-3434', '555-344-3434', 1, NULL);
+INSERT INTO `addresses` VALUES (2,CURDATE(),CURDATE(), NULL, '6 peace rd', '20910', 'aurora', 'CO', 'USA', '555-5555-3434', '555-344-3434', NULL, 1);
+LOCK TABLES `addresses` WRITE;
 
 LOCK TABLES `accounts` WRITE;
 INSERT INTO `accounts` VALUES (1,CURDATE(),CURDATE(),NULL,'bin123@fake.com','$2a$14$xXeWMeclVoWO1SjJSz2kzOxUv8ZntbY6b7yzdNzPWzWGumskvAlF2', 1);
