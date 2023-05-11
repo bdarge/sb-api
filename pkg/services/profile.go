@@ -73,12 +73,12 @@ func (server *ProfileServer) UpdateUser(_ context.Context, request *profile.Upda
 	}
 
 	value, err := protojson.Marshal(request)
-	if err != err {
+	if err != nil {
 		return &profile.UpdateUserResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
 	}
 	log.Printf("update profile constructed from a proto message: %s", value)
 
-	if err != err {
+	if err != nil {
 		return &profile.UpdateUserResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
 	}
 
@@ -92,6 +92,10 @@ func (server *ProfileServer) UpdateUser(_ context.Context, request *profile.Upda
 	}
 
 	err = server.H.DB.Model(&models.User{}).
+		Preload("Roles").
+		Preload("Business.Address").
+		Joins("Business").
+		Joins("Address").
 		Where("users.id = ?", request.Id).
 		First(&user).
 		Error
