@@ -116,8 +116,8 @@ func (server *Server) GetTransactions(_ context.Context, request *transaction.Ge
 
 	err := server.H.DB.Model(&models.Transaction{}).
 		Preload(clause.Associations).
-		Where("true = ? Or RequestType = ?", request.RequestType == "", request.RequestType).
-		Where("true = ? Or Description LIKE ?", request.Search == "", "%"+request.Search+"%").
+		Where("true = ? Or request_type = ?", request.RequestType == "", request.RequestType).
+		Where("true = ? Or description LIKE ?", request.Search == "", "%"+request.Search+"%").
 		Limit(int(request.Limit)).
 		Offset(int(request.Page * request.Limit)).
 		Order(request.SortProperty + " " + request.SortDirection).
@@ -131,8 +131,8 @@ func (server *Server) GetTransactions(_ context.Context, request *transaction.Ge
 	var total int64
 
 	server.H.DB.Model(&models.Transaction{}).
-		Where("true = ? Or RequestType = ?", request.RequestType == "", request.RequestType).
-		Where("true = ? Or Description LIKE ?", request.Search == "", "%"+request.Search+"%").
+		Where("true = ? Or request_type = ?", request.RequestType == "", request.RequestType).
+		Where("true = ? Or description LIKE ?", request.Search == "", "%"+request.Search+"%").
 		Count(&total)
 
 	page := models.Transactions{

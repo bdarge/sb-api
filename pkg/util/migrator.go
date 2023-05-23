@@ -24,6 +24,7 @@ func Migrate(conf Config, handler db.Handler) error {
 		&models.Account{},
 		&models.Address{},
 		&models.Customer{},
+		&models.CustomerAddress{},
 		&models.Transaction{},
 		&models.TransactionItem{},
 	)

@@ -15,11 +15,10 @@ type Model struct {
 // User Model. User has an account
 type User struct {
 	Model
-	UserName     string        `json:"username"`
+	UserName     string        `gorm:"column:username" json:"username"`
 	Address      Address       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"address"`
 	Roles        []Role        `gorm:"many2many:user_roles;" json:"roles"`
 	Transactions []Transaction `gorm:"foreignKey:CreatedBy" json:"transactions"`
 	BusinessID   uint32        `json:"businessId"`
-	Business     Business      `json:"business"`
-	Account      Account
+	Account      Account       `json:"account"`
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/bdarge/api/out/model"
 	"github.com/bdarge/api/out/profile"
 	"github.com/bdarge/api/pkg/db"
 	"github.com/bdarge/api/pkg/models"
@@ -21,12 +22,11 @@ type ProfileServer struct {
 
 func (server *ProfileServer) GetUser(_ context.Context, request *profile.GetUserRequest) (*profile.GetUserResponse, error) {
 	var u models.User
-	log.Printf("get profile with id, %d\n", request.Id)
+	log.Printf("get user with id, %d\n", request.Id)
 
 	err := server.H.DB.Model(&models.User{}).
 		Preload("Roles").
-		Preload("Business.Address").
-		Joins("Business").
+		Preload("Account").
 		Joins("Address").
 		Where("users.id = ?", request.Id).
 		First(&u).
@@ -34,12 +34,14 @@ func (server *ProfileServer) GetUser(_ context.Context, request *profile.GetUser
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &profile.GetUserResponse{Status: http.StatusNotFound, Error: err.Error()}, nil
+			log.Printf("Failed to load user %v", err)
+			return &profile.GetUserResponse{Status: http.StatusNotFound, Error: "User not found"}, nil
 		}
-		return &profile.GetUserResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
+		log.Printf("Failed to load user %v", err)
+		return &profile.GetUserResponse{Status: http.StatusInternalServerError, Error: "Failed to load user"}, nil
 	}
 
-	log.Printf("profile found: %v", u)
+	log.Printf("user found: %v", u)
 
 	response, err := mapUser(&u)
 
@@ -58,9 +60,10 @@ func (server *ProfileServer) GetUser(_ context.Context, request *profile.GetUser
 
 func (server *ProfileServer) UpdateUser(_ context.Context, request *profile.UpdateUserRequest) (*profile.UpdateUserResponse, error) {
 	var user models.User
-	log.Printf("update user (id = %d)\n", request.Id)
+	log.Printf("update user (id = %d)\n data=%v", request.Id, request.Data)
 
 	err := server.H.DB.Model(&models.User{}).
+		Joins("Address").
 		Where("users.id = ?", request.Id).
 		First(&user).
 		Error
@@ -72,17 +75,28 @@ func (server *ProfileServer) UpdateUser(_ context.Context, request *profile.Upda
 		return &profile.UpdateUserResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
 	}
 
-	value, err := protojson.Marshal(request)
-	if err != nil {
-		return &profile.UpdateUserResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
-	}
-	log.Printf("update profile constructed from a proto message: %s", value)
+	user.UserName = request.Data.Username
 
-	if err != nil {
-		return &profile.UpdateUserResponse{Status: http.StatusBadRequest, Error: err.Error()}, nil
+	if request.Data.Address.Landline != user.Address.Landline {
+		user.Address.Landline = request.Data.Address.Landline
+	}
+	if request.Data.Address.Mobile != user.Address.Mobile {
+		user.Address.Mobile = request.Data.Address.Mobile
+	}
+	if request.Data.Address.Street != user.Address.Street {
+		user.Address.Street = request.Data.Address.Street
+	}
+	if request.Data.Address.City != user.Address.City {
+		user.Address.City = request.Data.Address.City
+	}
+	if request.Data.Address.Country != user.Address.Country {
+		user.Address.Country = request.Data.Address.Country
+	}
+	if request.Data.Address.PostalCode != user.Address.PostalCode {
+		user.Address.PostalCode = request.Data.Address.PostalCode
 	}
 
-	err = server.H.DB.Model(user).Updates(request.Data).Error
+	err = server.H.DB.Model(&user).Save(user).Error
 
 	if err != nil {
 		log.Printf("Failed to update: %v", err)
@@ -93,8 +107,7 @@ func (server *ProfileServer) UpdateUser(_ context.Context, request *profile.Upda
 
 	err = server.H.DB.Model(&models.User{}).
 		Preload("Roles").
-		Preload("Business.Address").
-		Joins("Business").
+		Preload("Account").
 		Joins("Address").
 		Where("users.id = ?", request.Id).
 		First(&user).
@@ -122,12 +135,84 @@ func (server *ProfileServer) UpdateUser(_ context.Context, request *profile.Upda
 	}, nil
 }
 
+func (server *ProfileServer) UpdateBusiness(_ context.Context, request *profile.UpdateBusinessRequest) (*profile.UpdateBusinessResponse, error) {
+	var b models.Business
+	log.Printf("update business (id = %d)\n data=%v", request.Id, request.Data)
+
+	err := server.H.DB.Model(&models.Business{}).
+		Where("businesses.id = ?", request.Id).
+		First(&b).
+		Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &profile.UpdateBusinessResponse{Status: http.StatusNotFound, Error: err.Error()}, nil
+		}
+		return &profile.UpdateBusinessResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
+	}
+
+	b.Name = request.Data.Name
+
+	if request.Data.Landline != b.Landline {
+		b.Landline = request.Data.Landline
+	}
+	if request.Data.Mobile != b.Mobile {
+		b.Mobile = request.Data.Mobile
+	}
+	if request.Data.Street != b.Street {
+		b.Street = request.Data.Street
+	}
+	if request.Data.City != b.City {
+		b.City = request.Data.City
+	}
+	if request.Data.Country != b.Country {
+		b.Country = request.Data.Country
+	}
+	if request.Data.PostalCode != b.PostalCode {
+		b.PostalCode = request.Data.PostalCode
+	}
+
+	err = server.H.DB.Model(&b).Save(b).Error
+
+	if err != nil {
+		log.Printf("Failed to update: %v", err)
+		return &profile.UpdateBusinessResponse{
+			Status: http.StatusBadRequest, Error: "Failed to update",
+		}, nil
+	}
+
+	err = server.H.DB.Model(&models.Business{}).
+		Where("businesses.id = ?", request.Id).
+		First(&b).
+		Error
+
+	if err != nil {
+		log.Printf("Failed to get updated data: %v", err)
+		return &profile.UpdateBusinessResponse{
+			Status: http.StatusBadRequest, Error: "Failed to get updated data",
+		}, nil
+	}
+
+	response, err := mapBusiness(&b)
+
+	if err != nil {
+		log.Printf("Mapping to map to proto type failed: %v", err)
+		return &profile.UpdateBusinessResponse{
+			Status: http.StatusBadRequest, Error: "Failed to map to proto type",
+		}, nil
+	}
+
+	return &profile.UpdateBusinessResponse{
+		Status: http.StatusOK,
+		Data:   response,
+	}, nil
+}
+
 func (server *ProfileServer) GetBusiness(_ context.Context, request *profile.GetBusinessRequest) (*profile.GetBusinessResponse, error) {
 	var u models.Business
 	log.Printf("get business profile with id, %d\n", request.Id)
 
 	err := server.H.DB.Model(&models.Business{}).
-		Joins("Address").
 		Where("businesses.id = ?", request.Id).
 		First(&u).
 		Error
@@ -139,7 +224,7 @@ func (server *ProfileServer) GetBusiness(_ context.Context, request *profile.Get
 		return &profile.GetBusinessResponse{Status: http.StatusInternalServerError, Error: err.Error()}, nil
 	}
 
-	log.Printf("profile found: %v", u)
+	log.Printf("business found: %v", u)
 
 	response, err := mapBusiness(&u)
 
@@ -156,7 +241,7 @@ func (server *ProfileServer) GetBusiness(_ context.Context, request *profile.Get
 	}, nil
 }
 
-func mapBusiness(d *models.Business) (*profile.BusinessData, error) {
+func mapBusiness(d *models.Business) (*model.BusinessData, error) {
 	log.Printf("Marsha to proto type")
 	messageInBytes, err := json.Marshal(d)
 	if err != nil {
@@ -164,7 +249,7 @@ func mapBusiness(d *models.Business) (*profile.BusinessData, error) {
 		return nil, err
 	}
 	log.Printf("raw data:- %s", messageInBytes)
-	response := profile.BusinessData{}
+	response := model.BusinessData{}
 
 	// ignore unknown fields
 	unMarshaller := &protojson.UnmarshalOptions{DiscardUnknown: true}
@@ -178,7 +263,7 @@ func mapBusiness(d *models.Business) (*profile.BusinessData, error) {
 	return &response, nil
 }
 
-func mapUser(d *models.User) (*profile.UserData, error) {
+func mapUser(d *models.User) (*model.UserData, error) {
 	log.Printf("Marsha to proto type")
 	messageInBytes, err := json.Marshal(d)
 	if err != nil {
@@ -186,7 +271,7 @@ func mapUser(d *models.User) (*profile.UserData, error) {
 		return nil, err
 	}
 	log.Printf("raw data:- %s", messageInBytes)
-	response := profile.UserData{}
+	response := model.UserData{}
 
 	// ignore unknown fields
 	unMarshaller := &protojson.UnmarshalOptions{DiscardUnknown: true}

@@ -15,7 +15,7 @@ type Transaction struct {
 	CreatedBy     uint32            `json:"createdBy"`
 	CustomerID    uint32            `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"customerId"`
 	Customer      Customer          `json:"customer"`
-	RequestType   string            `gorm:"column:requestType" json:"requestType"`
+	RequestType   string            `gorm:"column:request_type" json:"requestType"`
 }
 
 // TransactionItem Model

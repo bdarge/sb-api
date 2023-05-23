@@ -8,7 +8,7 @@ INSERT INTO `roles` VALUES (4,CURDATE(),CURDATE(), NULL, 'user');
 UNLOCK TABLES;
 
 LOCK TABLES `businesses` WRITE;
-INSERT INTO `businesses` VALUES (1,CURDATE(),CURDATE(),NULL, 'BB plc', 50, 15);
+INSERT INTO `businesses` VALUES (1,CURDATE(),CURDATE(),NULL, 'BB plc', 50, 15, '80 world way', '20770', 'laurel', 'CO', 'USA', '555-344-3434', '555-344-3434');
 UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
@@ -24,8 +24,7 @@ INSERT INTO `user_roles` VALUES (1, 4);
 UNLOCK TABLES;
 
 LOCK TABLES `addresses` WRITE;
-INSERT INTO `addresses` VALUES (1,CURDATE(),CURDATE(), NULL, '80 world way', '20770', 'laurel', 'CO', 'USA', '555-344-3434', '555-344-3434', 1, NULL);
-INSERT INTO `addresses` VALUES (2,CURDATE(),CURDATE(), NULL, '6 peace rd', '20910', 'aurora', 'CO', 'USA', '555-5555-3434', '555-344-3434', NULL, 1);
+INSERT INTO `addresses` VALUES (2,CURDATE(),CURDATE(), NULL, '6 peace rd', '20910', 'aurora', 'CO', 'USA', '555-5555-3434', '555-344-3434', 1);
 LOCK TABLES `addresses` WRITE;
 
 LOCK TABLES `accounts` WRITE;
