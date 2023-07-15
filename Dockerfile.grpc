@@ -5,7 +5,7 @@ ENV APP=/go/app
 WORKDIR $APP
 
 # gcompat is required to use protoc - https://stackoverflow.com/questions/64447731/protoc-not-found-on-an-alpine-based-docker-container-running-protocol-buffers
-RUN apk update &&  \
+RUN apk update && \
     apk add gcompat && \
     apk add curl && \
     apk add make
