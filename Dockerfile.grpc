@@ -23,9 +23,9 @@ RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
 
 RUN ls $(go env GOPATH)/bin
 
-RUN $PATH
+RUN protoc --help
 
-RUN protoc --help && make --help
+RUN make --help
 
 WORKDIR /tmp/app
 
