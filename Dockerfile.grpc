@@ -1,5 +1,9 @@
 FROM golang:1.20-alpine as builder
 
+ENV APP /app
+
+WORKDIR $APP
+
 # gcompat is required to use protoc - https://stackoverflow.com/questions/64447731/protoc-not-found-on-an-alpine-based-docker-container-running-protocol-buffers
 RUN apk update && \
     apk add gcompat && \
@@ -9,9 +13,9 @@ RUN apk update && \
 RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
     curl -LO $PB_REL/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip
 
-RUN unzip protoc-3.15.8-linux-aarch_64.zip -d $HOME/.local
+RUN unzip protoc-3.15.8-linux-aarch_64.zip -d $APP/.local
 
-RUN export PATH="$PATH:$HOME/.local/bin"
+RUN export PATH="$PATH:$APP/.local/bin"
 
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
