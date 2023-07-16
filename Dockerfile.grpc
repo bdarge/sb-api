@@ -1,24 +1,34 @@
-FROM golang:1.20 as builder
+FROM golang:1.20.6-alpine3.18 as builder
 
 ENV APP /app
 
 WORKDIR $APP
 
-# gcompat is required to use protoc - https://stackoverflow.com/questions/64447731/protoc-not-found-on-an-alpine-based-docker-container-running-protocol-buffers
-RUN apt-get update && \
-    apt-get install gcompat && \
-    apt-get install curl && \
-    apt-get install make
+RUN apk update && apk add curl bash unzip build-base autoconf automake libtool make g++
 
-RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
-    curl -LO $PB_REL/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip && \
-    unzip protoc-3.15.8-linux-aarch_64.zip -d $APP/.local
+ENV PROTOBUF_VERSION 4.23.4
 
-ENV PATH="${PATH}:$APP/.local/bin"
+ENV PROTOBUF_URL https://github.com/google/protobuf/releases/download/v"$PROTOBUF_VERSION"/protobuf-cpp-"$PROTOBUF_VERSION".zip
 
-RUN ls -al
+RUN curl --silent -L -o protobuf.zip "$PROTOBUF_URL" && \
+    unzip protobuf.zip && \
+    cd protobuf-"$PROTOBUF_VERSION" && \
+    ./configure && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && rm protobuf.zip
 
-RUN ls -al .local
+#
+#RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
+#    curl -LO $PB_REL/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip
+
+# RUN unzip protoc-3.15.8-linux-aarch_64.zip -d $APP/.local
+
+#ENV PATH="${PATH}:$APP/.local/bin"
+#
+#RUN ls -al
+#
+#RUN ls -al .local
 
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
