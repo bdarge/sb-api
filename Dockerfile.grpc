@@ -4,20 +4,7 @@ ENV APP /app
 
 WORKDIR $APP
 
-RUN apk update && apk add curl bash unzip build-base autoconf automake libtool make g++
-
-#ENV PROTOBUF_VERSION 23.4
-#
-#ENV PROTOBUF_URL https://github.com/protocolbuffers/protobuf/releases/download/v"$PROTOBUF_VERSION"/protobuf-"$PROTOBUF_VERSION".zip
-#
-#RUN curl --silent -L -o protobuf.zip "$PROTOBUF_URL" && \
-#    unzip protobuf.zip && \
-#    cd protobuf-"$PROTOBUF_VERSION" && \
-#    ./configure && \
-#    make -j$(nproc) && \
-#    make install && \
-#    cd .. && rm protobuf.zip
-
+RUN apk update && apk add curl unzip make
 
 RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
     curl -LO $PB_REL/download/v23.4/protoc-23.4-linux-aarch_64.zip
@@ -26,19 +13,9 @@ RUN unzip protoc-23.4-linux-aarch_64.zip -d $APP/.local
 
 ENV PATH="${PATH}:$APP/.local/bin"
 
-RUN ls -al
-
-RUN ls -al .local
-
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
     export PATH="$PATH:$(go env GOPATH)/bin"
-
-RUN ls $(go env GOPATH)/bin
-
-RUN protoc --help
-
-RUN make --help
 
 WORKDIR /tmp/app
 
@@ -52,8 +29,7 @@ RUN go build -o ./build cmd/main.go
 
 FROM golang:1.20-alpine as dev
 
-RUN apk update && \
-    apk add make \
+RUN apk update && apk add make
 
 WORKDIR /bin/app
 
