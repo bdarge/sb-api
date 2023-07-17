@@ -6,29 +6,29 @@ WORKDIR $APP
 
 RUN apk update && apk add curl bash unzip build-base autoconf automake libtool make g++
 
-ENV PROTOBUF_VERSION 23.4
-
-ENV PROTOBUF_URL https://github.com/protocolbuffers/protobuf/releases/download/v"$PROTOBUF_VERSION"/protobuf-"$PROTOBUF_VERSION".zip
-
-RUN curl --silent -L -o protobuf.zip "$PROTOBUF_URL" && \
-    unzip protobuf.zip && \
-    cd protobuf-"$PROTOBUF_VERSION" && \
-    ./configure && \
-    make -j$(nproc) && \
-    make install && \
-    cd .. && rm protobuf.zip
-
+#ENV PROTOBUF_VERSION 23.4
 #
-#RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
-#    curl -LO $PB_REL/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip
-
-# RUN unzip protoc-3.15.8-linux-aarch_64.zip -d $APP/.local
-
-#ENV PATH="${PATH}:$APP/.local/bin"
+#ENV PROTOBUF_URL https://github.com/protocolbuffers/protobuf/releases/download/v"$PROTOBUF_VERSION"/protobuf-"$PROTOBUF_VERSION".zip
 #
-#RUN ls -al
-#
-#RUN ls -al .local
+#RUN curl --silent -L -o protobuf.zip "$PROTOBUF_URL" && \
+#    unzip protobuf.zip && \
+#    cd protobuf-"$PROTOBUF_VERSION" && \
+#    ./configure && \
+#    make -j$(nproc) && \
+#    make install && \
+#    cd .. && rm protobuf.zip
+
+
+RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
+    curl -LO $PB_REL/download/v23.4/protoc-23.4-linux-aarch_64.zip
+
+RUN unzip protoc-23.4-linux-aarch_64.zip -d $APP/.local
+
+ENV PATH="${PATH}:$APP/.local/bin"
+
+RUN ls -al
+
+RUN ls -al .local
 
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
