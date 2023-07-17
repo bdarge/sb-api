@@ -6,9 +6,9 @@ WORKDIR $APP
 
 RUN apk update && apk add curl bash unzip build-base autoconf automake libtool make g++
 
-ENV PROTOBUF_VERSION 4.23.4
+ENV PROTOBUF_VERSION v23.4
 
-ENV PROTOBUF_URL https://github.com/google/protobuf/releases/download/v"$PROTOBUF_VERSION"/protobuf-cpp-"$PROTOBUF_VERSION".zip
+ENV PROTOBUF_URL https://github.com/protobuf/releases/download/v"$PROTOBUF_VERSION"/protobuf-"$PROTOBUF_VERSION".zip
 
 RUN curl --silent -L -o protobuf.zip "$PROTOBUF_URL" && \
     unzip protobuf.zip && \
