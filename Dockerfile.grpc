@@ -53,6 +53,8 @@ RUN apk --no-cache add ca-certificates git bash
 
 LABEL org.opencontainers.image.source=https://github.com/bdarge/sb-api
 
+LABEL org.opencontainers.image.description="small business (sb) api"
+
 WORKDIR /app
 
 COPY --from=builder /tmp/app/build /app/api

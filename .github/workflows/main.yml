@@ -50,6 +50,19 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
 
+      - name: Set Versions
+        uses: actions/github-script@v6
+        id: set_version
+        with:
+          script: |
+            const tag = context.ref.substring(10)
+            const no_v = tag.replace('v', '')
+            const dash_index = no_v.lastIndexOf('-')
+            const no_dash = (dash_index > -1) ?  no_v.substring(0, dash_index) : no_v
+            core.setOutput('tag', tag)
+            core.setOutput('no-v', no_v)
+            core.setOutput('no-dash', no_dash)
+
       - name: Build and push Docker image
         uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825
         with:
@@ -58,5 +71,7 @@ jobs:
           push: true
           target: prod
           platforms: linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            latest
+            ${{steps.set_version.outputs.no-dash}}
