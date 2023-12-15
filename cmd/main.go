@@ -46,14 +46,10 @@ func main() {
 	lis, err := net.Listen("tcp", conf.ServerPort)
 
 	if err != nil {
-		log.Fatalln("Failed to listing:", err)
+		log.Fatalf("Listing on port %s has failed: %v", conf.ServerPort, err)
 	}
 
-	if err != nil {
-		log.Fatalln("Failed to listing:", err)
-	}
-
-	fmt.Println("api service on", conf.ServerPort)
+	fmt.Printf("api service is listening on %s", conf.ServerPort)
 
 	transactionServer := services.Server{
 		H: handler,
