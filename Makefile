@@ -1,3 +1,5 @@
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
+
 proto:
 	 mkdir -p out && protoc ./pb/model.proto ./pb/customer.proto ./pb/transaction.proto ./pb/profile.proto \
   	--go_out=:. --go-grpc_out=:. \
@@ -15,3 +17,6 @@ proto:
 
 server:
 	go run cmd/main.go
+
+build:
+	@$(MAKE) -f $(THIS_FILE) proto; docker build -f Dockerfile.grpc -t api --target dev . --no-cache
