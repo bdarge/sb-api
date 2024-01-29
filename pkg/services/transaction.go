@@ -23,6 +23,7 @@ type Server struct {
 	transaction.UnimplementedTransactionServiceServer
 }
 
+// CreateTransaction Creates a transaction
 func (server *Server) CreateTransaction(_ context.Context, request *transaction.CreateTransactionRequest) (*transaction.CreateTransactionResponse, error) {
 	d := &models.Transaction{}
 	log.Printf("Create transaction %v", request)
@@ -56,6 +57,7 @@ func (server *Server) CreateTransaction(_ context.Context, request *transaction.
 	}, nil
 }
 
+// GetTransaction returns a transaction
 func (server *Server) GetTransaction(_ context.Context, request *transaction.GetTransactionRequest) (*transaction.GetTransactionResponse, error) {
 	var d models.Transaction
 	log.Printf("get transaction with id, %d\n", request.Id)
@@ -91,6 +93,7 @@ func (server *Server) GetTransaction(_ context.Context, request *transaction.Get
 	}, nil
 }
 
+// GetTransactions returns a list of transaction in data property
 func (server *Server) GetTransactions(_ context.Context, request *transaction.GetTransactionsRequest) (*transaction.GetTransactionsResponse, error) {
 	log.Printf("get all transactions, %v", request)
 
@@ -165,6 +168,7 @@ func (server *Server) GetTransactions(_ context.Context, request *transaction.Ge
 	return &response, nil
 }
 
+// UpdateTransaction updates a transaction, and returns it
 func (server *Server) UpdateTransaction(_ context.Context, request *transaction.UpdateTransactionRequest) (*transaction.UpdateTransactionResponse, error) {
 	var d models.Transaction
 	log.Printf("update transaction (id = %d)\n", request.Id)
@@ -225,6 +229,7 @@ func (server *Server) UpdateTransaction(_ context.Context, request *transaction.
 	}, nil
 }
 
+// DeleteTransaction deletes a transaction
 func (server *Server) DeleteTransaction(_ context.Context, request *transaction.DeleteTransactionRequest) (*transaction.DeleteTransactionResponse, error) {
 	var d models.Transaction
 	log.Printf("delete transaction with id: %d\n", request.Id)

@@ -6,6 +6,7 @@ import (
 	"github.com/bdarge/api/out/customer"
 	"github.com/bdarge/api/out/profile"
 	"github.com/bdarge/api/out/transaction"
+	"github.com/bdarge/api/out/transactionItem"
 	"github.com/bdarge/api/pkg/config"
 	"github.com/bdarge/api/pkg/db"
 	"github.com/bdarge/api/pkg/models"
@@ -61,32 +62,36 @@ func main() {
 		log.Fatalf("Listing on port %s has failed: %v", conf.ServerPort, err)
 	}
 
-	fmt.Printf("api service is listening on %s", conf.ServerPort)
+	grpcServer := grpc.NewServer()
+
+	healthcheck := health.NewServer()
+	healthgrpc.RegisterHealthServer(grpcServer, healthcheck)
 
 	transactionServer := services.Server{
 		H: handler,
 	}
-
-	grpcServer := grpc.NewServer()
-	healthcheck := health.NewServer()
-	healthgrpc.RegisterHealthServer(grpcServer, healthcheck)
 	transaction.RegisterTransactionServiceServer(grpcServer, &transactionServer)
+
+	transactionItemServer := services.TransactionItemServer{
+		H: handler,
+	}
+	transactionItem.RegisterTransactionItemServiceServer(grpcServer, &transactionItemServer)
 
 	customerServer := services.CustomerServer{
 		H: handler,
 	}
-
 	customer.RegisterCustomerServiceServer(grpcServer, &customerServer)
 
 	profileServer := services.ProfileServer{
 		H: handler,
 	}
-
 	profile.RegisterProfileServiceServer(grpcServer, &profileServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalln("Failed to serve:", err)
 	}
+
+	fmt.Printf("api service is listening on %s", conf.ServerPort)
 
 	go func() {
 		// asynchronously inspect dependencies and toggle serving status as needed
@@ -94,7 +99,7 @@ func main() {
 
 		for {
 			healthcheck.SetServingStatus(system, next)
-			err = IsDbConnectionWorks(profileServer.H.DB)
+			err = isDbConnectionWorks(profileServer.H.DB)
 			if err != nil {
 				next = healthpb.HealthCheckResponse_NOT_SERVING
 			} else {
@@ -105,6 +110,6 @@ func main() {
 	}()
 }
 
-func IsDbConnectionWorks(DB *gorm.DB) error {
+func isDbConnectionWorks(DB *gorm.DB) error {
 	return DB.First(&models.Account{}).Error
 }

@@ -27,25 +27,15 @@ RUN make proto
 
 RUN go build -o ./build cmd/main.go
 
-FROM golang:1.20-alpine as dev
-
-RUN apk update && apk add make
+FROM golang:1.20.6-alpine3.18 as dev
 
 WORKDIR /bin/app
 
-RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
+COPY . .
 
-RUN make proto
+RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
 
 ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o ./bin/app ./cmd/" -command="./bin/app"
-
-FROM golang:1.20-alpine as dev_migrator
-
-WORKDIR /bin/app_migrator
-
-RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
-
-ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o ./bin/app_migrator ./cmd/" -command="./bin/app_migrator"
 
 FROM alpine:latest as prod
 

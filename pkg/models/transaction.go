@@ -25,12 +25,21 @@ type TransactionItem struct {
 	Qty           uint32  `gorm:"column:qty" json:"qty"`
 	Unit          string  `gorm:"column:unit" json:"unit"`
 	UnitPrice     float64 `gorm:"column:unit_price" json:"unitPrice"`
-	TransactionID uint32  `json:"transactionId"`
+	TransactionID uint32  `gorm:"column:transaction_id" json:"transactionId"`
 }
 
+// Transactions Model
 type Transactions struct {
 	Limit uint32        `json:"limit"`
 	Page  uint32        `json:"page"`
 	Total uint32        `json:"total"`
 	Data  []Transaction `json:"data"`
+}
+
+// TransactionItems Model
+type TransactionItems struct {
+	Limit uint32            `json:"limit"`
+	Page  uint32            `json:"page"`
+	Total uint32            `json:"total"`
+	Data  []TransactionItem `json:"data"`
 }
