@@ -5,7 +5,7 @@ go 1.23.2
 require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/golang-migrate/migrate/v4 v4.18.1
-	github.com/spf13/viper v1.18.0
+	github.com/spf13/viper v1.18.2
 	google.golang.org/grpc v1.69.2
 	google.golang.org/protobuf v1.36.0
 	gorm.io/driver/mysql v1.5.7
