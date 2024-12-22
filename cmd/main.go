@@ -43,12 +43,10 @@ func main() {
 
 	// init env object
 	env := util.NewEnv()
-	migrateData := env.GetBool("MIGRATOR")
-	log.Printf("migrateData => %t", migrateData)
-
+	isMigrator := env.GetBool("MIGRATOR")
 	handler := db.Init(conf.DSN)
 
-	if migrateData {
+	if isMigrator {
 		if err := util.Migrate(conf, handler); err != nil {
 			log.Fatalln(err)
 		}

@@ -32,5 +32,5 @@ func LoadConfig(target string) (config Config, err error) {
 		return
 	}
 	err = viper.Unmarshal(&config)
-	return config, nil
+	return
 }
