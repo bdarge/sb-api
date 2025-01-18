@@ -31,6 +31,10 @@ var (
 )
 
 func main() {
+	var programLevel = new(slog.LevelVar)
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel}))
+	slog.SetDefault(logger)
+
 	environment := os.Getenv("ENV")
 	if environment == "" {
 		environment = "dev"
@@ -40,11 +44,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("Failed to load configuration: %s. ", err))
 	}
-
-	var programLevel = new(slog.LevelVar)
 	programLevel.Set(conf.LogLevel)
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel}))
-	slog.SetDefault(logger)
 
 	// init env object
 	env := util.NewEnv()

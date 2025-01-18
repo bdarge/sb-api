@@ -1,7 +1,6 @@
 package config
 
 import (
-	"database/sql"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
 	"golang.org/x/exp/slog"
