@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
+	"golang.org/x/exp/slog"
 )
 
+// Config app configuration
 type Config struct {
-	SqlDB *sql.DB
 	// the shared DB ORM object
 	DB *gorm.DB
 	// the error thrown be GORM when using DB ORM object
@@ -20,6 +21,8 @@ type Config struct {
 	MigrationDir string `mapstructure:"MIGRATION_DIR"`
 	// database
 	Database string `mapstructure:"DATABASE"`
+	// log level
+	LogLevel slog.Level `mapstructure:"LOG_LEVEL"`
 }
 
 // LoadConfig loads config from files

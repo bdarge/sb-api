@@ -34,7 +34,7 @@ func Migrate(conf Config, handler db.Handler) error {
 
 	driver, _ := mysql.WithInstance(dbInstance, &mysql.Config{})
 
-	log.Printf("read migraction script from: %s", conf.MigrationDir)
+	log.Printf("read migration script from: %s", conf.MigrationDir)
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://"+conf.MigrationDir,
 		conf.Database,

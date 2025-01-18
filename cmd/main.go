@@ -14,10 +14,10 @@ import (
 	"github.com/bdarge/api/pkg/util"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+		"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
-	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"gorm.io/gorm"
 	"log"
 	"net"
@@ -41,6 +41,11 @@ func main() {
 		panic(fmt.Errorf("Failed to load configuration: %s. ", err))
 	}
 
+	var programLevel = new(slog.LevelVar)
+	programLevel.Set(conf.LogLevel)
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel}))
+	slog.SetDefault(logger)
+
 	// init env object
 	env := util.NewEnv()
 	isMigrator := env.GetBool("MIGRATOR")
@@ -50,7 +55,7 @@ func main() {
 		if err := util.Migrate(conf, handler); err != nil {
 			log.Fatalln(err)
 		}
-		log.Println("Successfully migrated database.")
+		slog.Info("Successfully migrated database.")
 		os.Exit(0)
 	}
 
@@ -89,19 +94,19 @@ func main() {
 		log.Fatalln("Failed to serve:", err)
 	}
 
-	fmt.Printf("api service is listening on %s", conf.ServerPort)
+	slog.Info("api service is listening", "Port", conf.ServerPort)
 
 	go func() {
 		// asynchronously inspect dependencies and toggle serving status as needed
-		next := healthpb.HealthCheckResponse_SERVING
+		next := healthgrpc.HealthCheckResponse_SERVING
 
 		for {
 			healthcheck.SetServingStatus(system, next)
 			err = isDbConnectionWorks(profileServer.H.DB)
 			if err != nil {
-				next = healthpb.HealthCheckResponse_NOT_SERVING
+				next = healthgrpc.HealthCheckResponse_NOT_SERVING
 			} else {
-				next = healthpb.HealthCheckResponse_SERVING
+				next = healthgrpc.HealthCheckResponse_SERVING
 			}
 			time.Sleep(*sleep)
 		}
