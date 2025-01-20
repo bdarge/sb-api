@@ -94,7 +94,7 @@ func main() {
 		log.Fatalln("Failed to serve:", err)
 	}
 
-	slog.Info("api service is listening", "Port", conf.ServerPort)
+	slog.Info("Api service is listening", "Port", conf.ServerPort)
 
 	go func() {
 		// asynchronously inspect dependencies and toggle serving status as needed
