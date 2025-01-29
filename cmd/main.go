@@ -44,7 +44,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("Failed to load configuration: %s. ", err))
 	}
-	slog.Info("See config", "config", conf)
+
 	programLevel.Set(conf.LogLevel)
 
 	// init env object
