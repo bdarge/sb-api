@@ -2,7 +2,7 @@ FROM golang:1.23.2-alpine3.19 AS builder
 
 LABEL org.opencontainers.image.description="Internal API"
 
-ENV APP /app
+ENV APP=/app
 
 WORKDIR $APP
 
