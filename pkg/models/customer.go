@@ -8,6 +8,7 @@ type Customer struct {
 	Address CustomerAddress `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"address"`
 }
 
+// Customers Model
 type Customers struct {
 	Limit uint32     `json:"limit"`
 	Page  uint32     `json:"page"`

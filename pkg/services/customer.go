@@ -16,11 +16,13 @@ import (
 	"strings"
 )
 
+// CustomerServer customer server
 type CustomerServer struct {
 	H db.Handler
 	customer.UnimplementedCustomerServiceServer
 }
 
+// CreateCustomer adds a new customer
 func (server *CustomerServer) CreateCustomer(ctx context.Context, request *customer.CreateCustomerRequest) (*customer.CreateCustomerResponse, error) {
 	log.Printf("create customer: %s\n", request.Name)
 
@@ -39,6 +41,7 @@ func (server *CustomerServer) CreateCustomer(ctx context.Context, request *custo
 	}, nil
 }
 
+// GetCustomer returns a customer
 func (server *CustomerServer) GetCustomer(ctx context.Context, request *customer.GetCustomerRequest) (*customer.GetCustomerResponse, error) {
 	var c models.Customer
 	log.Printf("get customer with id, %d\n", request.Id)
@@ -61,6 +64,7 @@ func (server *CustomerServer) GetCustomer(ctx context.Context, request *customer
 	}, nil
 }
 
+// GetCustomers returns all customers
 func (server *CustomerServer) GetCustomers(_ context.Context, request *customer.GetCustomersRequest) (*customer.GetCustomersResponse, error) {
 	log.Printf("get customers, search filter=%s", request.Search)
 
@@ -132,6 +136,7 @@ func (server *CustomerServer) GetCustomers(_ context.Context, request *customer.
 	return &response, nil
 }
 
+// UpdateCustomer updates a customer
 func (server *CustomerServer) UpdateCustomer(_ context.Context, request *customer.UpdateCustomerRequest) (*customer.UpdateCustomerResponse, error) {
 	var c models.Customer
 	log.Printf("update customer (id = %d)\n", request.Id)
@@ -184,6 +189,7 @@ func (server *CustomerServer) UpdateCustomer(_ context.Context, request *custome
 	}, nil
 }
 
+// DeleteCustomer delete a customer
 func (server *CustomerServer) DeleteCustomer(_ context.Context, request *customer.DeleteCustomerRequest) (*customer.DeleteCustomerResponse, error) {
 	var c models.Customer
 	log.Printf("delete customer with id, %d\n", request.Id)
@@ -213,6 +219,7 @@ func (server *CustomerServer) DeleteCustomer(_ context.Context, request *custome
 		Status: http.StatusOK,
 	}, nil
 }
+
 
 func mapCustomer(d *models.Customer) (*model.CustomerData, error) {
 	log.Printf("Marsha to proto type")
