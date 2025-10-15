@@ -7,6 +7,7 @@ import (
 	"github.com/bdarge/api/out/profile"
 	"github.com/bdarge/api/out/transaction"
 	"github.com/bdarge/api/out/transactionItem"
+	"github.com/bdarge/api/out/lang"
 	"github.com/bdarge/api/pkg/config"
 	"github.com/bdarge/api/pkg/db"
 	"github.com/bdarge/api/pkg/models"
@@ -25,6 +26,11 @@ import (
 	"time"
 )
 
+func logger() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+}
+
 var (
 	sleep  = flag.Duration("sleep", time.Second*5, "duration between changes in health")
 	system = "" // empty string represents the health of the system
@@ -32,8 +38,7 @@ var (
 
 func main() {
 	var programLevel = new(slog.LevelVar)
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel}))
-	slog.SetDefault(logger)
+	logger()
 
 	environment := os.Getenv("ENV")
 	if environment == "" {
@@ -90,6 +95,11 @@ func main() {
 		H: handler,
 	}
 	profile.RegisterProfileServiceServer(grpcServer, &profileServer)
+
+	langServer := services.LangServer{
+		H: handler,
+	}
+	lang.RegisterLangServiceServer(grpcServer, &langServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalln("Failed to serve:", err)

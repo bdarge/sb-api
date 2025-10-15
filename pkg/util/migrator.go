@@ -3,18 +3,24 @@ package util
 import (
 	"database/sql"
 	"errors"
-	. "github.com/bdarge/api/pkg/config"
+	"log/slog"
+	"os"
+
+	"github.com/bdarge/api/pkg/config"
 	"github.com/bdarge/api/pkg/db"
 	"github.com/bdarge/api/pkg/models"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"log"
-	"os"
 )
 
-func Migrate(conf Config, handler db.Handler) error {
+func logger() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+}
+
+// Migrate migrates
+func Migrate(conf config.Config, handler db.Handler) error {
+	logger()
 	dbInstance, _ := sql.Open("mysql", conf.DSN+"&multiStatements=true")
 
 	err := handler.DB.AutoMigrate(
@@ -27,6 +33,7 @@ func Migrate(conf Config, handler db.Handler) error {
 		&models.CustomerAddress{},
 		&models.Transaction{},
 		&models.TransactionItem{},
+		&models.Lang{},
 	)
 	if err != nil {
 		return err
@@ -34,7 +41,7 @@ func Migrate(conf Config, handler db.Handler) error {
 
 	driver, _ := mysql.WithInstance(dbInstance, &mysql.Config{})
 
-	log.Printf("read migration script from: %s", conf.MigrationDir)
+	slog.Info("read migration scripts", "directory", conf.MigrationDir)
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://"+conf.MigrationDir,
 		conf.Database,
@@ -42,7 +49,7 @@ func Migrate(conf Config, handler db.Handler) error {
 	)
 
 	if err != nil {
-		log.Println("ERROR => ", err)
+		slog.Error("Migration scripts failed", "error", err)
 		return err
 	}
 
@@ -53,10 +60,10 @@ func Migrate(conf Config, handler db.Handler) error {
 	}
 
 	if err != nil {
-		log.Println("ERROR => ", err)
+		slog.Error("Migration scripts failed", "error", err)
 		return err
 	}
-	log.Printf("Applied migrations")
+	slog.Info("Migration done successfully")
 
 	return nil
 }
